@@ -6,7 +6,7 @@ import requests
 ##app and local db config
 app = Flask(__name__)
 app.config["DEBUG"] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///C:\\Users\\oscar\\vuforia\\middle-server\\api\\chessgame.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chessgame.db'
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
@@ -105,6 +105,12 @@ chess_games_schema = ChessGameSchema(many=True)
 
 
 ######### game endpoints ########
+
+@app.route('/')
+def index():
+    return 'Welcome'
+
+
 @app.route('/create-game', methods=['GET'])
 def create_game():
 	remote_request = requests.get(external_endpoints['create_game']).json()
