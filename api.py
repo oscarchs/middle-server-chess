@@ -5,8 +5,8 @@ import requests
 
 ##app and local db config
 app = Flask(__name__)
-app.config["DEBUG"] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chessgame.db'
+
+app.config.from_pyfile('config.py')
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
@@ -175,4 +175,4 @@ def make_move():
 
 
 if __name__ == '__main__':
-	app.run()
+	app.run(host='0.0.0.0')
