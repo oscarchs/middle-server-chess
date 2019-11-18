@@ -122,7 +122,7 @@ def list_games():
 	games = ChessGame.query.all()
 	return jsonify(chess_games_schema.dump(games))
 
-@app.route('/list-moves/<string:game_id>')
+@app.route('/list-moves/<string:game_id>', methods=['GET'])
 def list_moves(game_id):
 	moves = Move.query.filter_by(id=game_id).first().moves
 	return jsonify(moves_schema.dump(moves))
