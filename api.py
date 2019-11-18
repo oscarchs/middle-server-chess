@@ -123,8 +123,8 @@ def list_games():
 	return jsonify(chess_games_schema.dump(games))
 
 @app.route('/list-moves/<string:game_id>', methods=['GET'])
-def list_moves(game_id):
-	moves = Move.query.filter_by(id=game_id).first().moves
+def list_moves():
+	moves = Move.query.filter_by(id=request.args.get('game_id','')).first().moves
 	return jsonify(moves_schema.dump(moves))
 
 @app.route('/game_status', methods=['POST'])
