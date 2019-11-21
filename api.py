@@ -131,6 +131,14 @@ def list_moves(game_id):
 	moves = Move.query.filter_by(game_id=game_id).all()
 	return jsonify(moves_schema.dump(moves))
 
+
+@app.route('/clear_moves/<game_id>', methods=['GET'])
+def clear_moves(game_id):
+        game = ChessGame.query.filter_by(id=game_id).first()
+        game.moves = []
+        db.session.commit()
+        return jsonify(chess_game_schema.dump(game))
+
 @app.route('/game_status', methods=['POST'])
 def game_status():
 	data = {
@@ -161,6 +169,13 @@ def enter_game():
 	player.game_id = game.id
 	db.session.commit()
 	return jsonify(player_schema.dump(player))
+
+@app.route('/exit_game', methods=['POST'])
+def exit_game():
+        player = Player.query.filter_by(id=request.args.get('player_id','')).first()
+        player.game_id = ""
+        db.session.commit()
+        return jsonify(player_schema.dump(player))
 
 @app.route('/possible_moves', methods=['POST'])
 def possible_moves():
