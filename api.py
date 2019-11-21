@@ -109,12 +109,11 @@ def index():
 
 @app.route('/authenticate', methods=['POST'])
 def authenticate():	
-	username = request.args.get('username',''),
+	username = request.args.get('username','')
 	password = request.args.get('password','')
-	if username is not null and password is not null:
-		player = Player.query.filter_by(name == username, password == password).first()
-		if player is not null:
-			return jsonify(player_schema.dump(player))
+	if username != '' and password != '':
+		player = Player.query.filter_by(name = username, password = password).first()
+		return jsonify(player_schema.dump(player))
 
 @app.route('/create-game', methods=['GET'])
 def create_game():
