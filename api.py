@@ -20,16 +20,15 @@ external_endpoints = {
 }
 
 
-
 ##models
 class ChessGame(db.Model):
     id = db.Column(db.Unicode, primary_key=True)
     players = db.relationship('Player',backref='player')
     moves = db.relationship('Move',backref='moves')
-    
+
     def __repr__(self):
         return '<ChessGame: {}>, CurrentPlayers: {}'.format(self.id,self.players)
-    
+
     @classmethod
     def create(cls, **kw):
         obj = cls(**kw)
@@ -41,10 +40,11 @@ class Player(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     game_id = db.Column(db.Unicode, db.ForeignKey(ChessGame.id))
+    password = db.Column(db.String)
 
     def __repr__(self):
         return '<Player: {}, CurrentGame: {}>'.format(self.name,self.game_id)
-    
+
     @classmethod
     def create(cls, **kw):
         obj = cls(**kw)
@@ -67,10 +67,6 @@ class Move(db.Model):
         db.session.add(obj)
         db.session.commit()
         return obj
-
-
-
-
 
 ## serialize schemes
 
@@ -110,6 +106,14 @@ chess_games_schema = ChessGameSchema(many=True)
 def index():
     return 'Welcome'
 
+@app.route('/authenticate', methods=['POST'])
+def authenticate():	
+	username = request.args.get('username',''),
+	password = request.args.get('password','')
+	if username is not null and password is not null:
+		player = Player.query.filter_by(name == username, password == password).first()
+		if player is not null:
+			return jsonify(player_schema.dump(player))
 
 @app.route('/create-game', methods=['GET'])
 def create_game():
