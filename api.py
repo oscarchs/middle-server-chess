@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
+from flask_migrate import Migrate
 import requests
 
 ##app and local db config
@@ -9,7 +10,7 @@ app = Flask(__name__)
 app.config.from_pyfile('config.py')
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
-
+migrate = Migrate(app, db)
 
 ## external api chess endpoints
 external_endpoints = {
