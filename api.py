@@ -26,7 +26,7 @@ class ChessGame(db.Model):
     id = db.Column(db.Unicode, primary_key=True)
     players = db.relationship('Player',backref='player')
     moves = db.relationship('Move',backref='moves')
-    possible_moves = db.relationship('PossibleMove', backref='possible_moves')
+    possible_moves = db.relationship('ListPossibleMoves', backref='list_possible_moves')
 
     def __repr__(self):
         return '<ChessGame: {}>, CurrentPlayers: {}'.format(self.id,self.players)
@@ -53,12 +53,27 @@ class Player(db.Model):
         db.session.add(obj)
         db.session.commit()
 
-class PossibleMove(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+class ListPossibleMoves(db.Model):
+    id = db.Column(db.Unicode, primary_key=True)
+    moves = db.relationship('PossibleMove',backref='possible_moves_list')
     player_id = db.Column(db.Integer, db.ForeignKey(Player.id))
     game_id = db.Column(db.Unicode, db.ForeignKey(ChessGame.id))
+    def __repr__(self):
+        return '<ListOfPossibleMoves: {}>'.format(self.id)
+
+    @classmethod
+    def create(cls, **kw):
+        obj = cls(**kw)
+        db.session.add(obj)
+        db.session.commit()
+        return obj
+
+
+class PossibleMove(db.Model):
+    id = db.Column(db.Unicode, primary_key=True)
     source_position = db.Column(db.String)
     target_position = db.Column(db.String)
+    list_id = db.Column(db.Integer, db.ForeignKey(ListPossibleMoves.id)) 
     
     def __repr__(self):
         return '<PossibleMove: {}>'.format(self.id)
@@ -99,7 +114,7 @@ players_schema = PlayerSchema(many=True)
 
 class MoveSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'player_id', 'game_id','source_position','target_position')
+        fields = ('id', 'game_id','source_position','target_position')
 
 move_schema = MoveSchema()
 moves_schema = MoveSchema(many=True)
@@ -158,8 +173,8 @@ def list_moves(game_id):
 @app.route('/list-possible-moves/<game_id>', methods=['GET'])
 def list_possible_moves(game_id):
         moves = PossibleMove.query.filter_by(game_id=game_id).group_by(PossibleMove.player_id).all()
-        print(jsonify(moves))
-        return jsonify(moves)
+        print(len(moves))
+        return jsonify(possible_moves_schema.dump(moves))
 
 @app.route('/clear_moves/<game_id>', methods=['GET'])
 def clear_moves(game_id):
