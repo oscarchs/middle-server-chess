@@ -14,10 +14,10 @@ migrate = Migrate(app, db)
 
 ## external api chess endpoints
 external_endpoints = {
-	'create_game': 'http://chess-api-chess.herokuapp.com/api/v1/chess/two',
-	'possible_moves': 'http://chess-api-chess.herokuapp.com/api/v1/chess/two/moves',
-	'check_game': 'http://chess-api-chess.herokuapp.com/api/v1/chess/two/check',
-	'current_status': 'http://chess-api-chess.herokuapp.com/api/v1/chess/two/fen'
+        'create_game': 'http://chess-api-chess.herokuapp.com/api/v1/chess/two',
+        'possible_moves': 'http://chess-api-chess.herokuapp.com/api/v1/chess/two/moves',
+        'check_game': 'http://chess-api-chess.herokuapp.com/api/v1/chess/two/check',
+        'current_status': 'http://chess-api-chess.herokuapp.com/api/v1/chess/two/fen'
 }
 
 
@@ -132,35 +132,34 @@ def index():
     return 'Welcome'
 
 @app.route('/authenticate', methods=['POST'])
-def authenticate():	
-	username = request.args.get('username','')
-	password = request.args.get('password','')
-	if username != '' and password != '':
-		player = Player.query.filter_by(name = username, password = password).first()
-		return jsonify(player_schema.dump(player))
+def authenticate():     
+        username = request.args.get('username','')
+        password = request.args.get('password','')
+        if username != '' and password != '':
+                player = Player.query.filter_by(name = username, password = password).first()
+                return jsonify(player_schema.dump(player))
 
 @app.route('/create-game', methods=['GET'])
 def create_game():
-	remote_request = requests.get(external_endpoints['create_game']).json()
-	ChessGame.create(id=remote_request['game_id'])
-	return jsonify(remote_request)
+        remote_request = requests.get(external_endpoints['create_game']).json()
+        ChessGame.create(id=remote_request['game_id'])
+        return jsonify(remote_request)
 
 @app.route('/list-games', methods=['GET'])
 def list_games():
-	games = ChessGame.query.all()
-	return jsonify(chess_games_schema.dump(games))
+        games = ChessGame.query.all()
+        return jsonify(chess_games_schema.dump(games))
 
 @app.route('/list-moves/<game_id>', methods=['GET'])
 def list_moves(game_id):
-	moves = Move.query.filter_by(game_id=game_id).all()
-	return jsonify(moves_schema.dump(moves))
+        moves = Move.query.filter_by(game_id=game_id).all()
+        return jsonify(moves_schema.dump(moves))
 
 @app.route('/list-possible-moves/<game_id>', methods=['GET'])
 def list_possible_moves(game_id):
-	moves = PossibleMove.query.filter_by(game_id=game_id).group_by(PossibleMove.player_id).all()
-	return jsonify(moves.json())
-
-
+        moves = PossibleMove.query.filter_by(game_id=game_id).group_by(PossibleMove.player_id).all()
+        print(moves)
+        return jsonify(moves)
 
 @app.route('/clear_moves/<game_id>', methods=['GET'])
 def clear_moves(game_id):
@@ -171,34 +170,34 @@ def clear_moves(game_id):
 
 @app.route('/game_status', methods=['POST'])
 def game_status():
-	data = {
-		'game_id': request.args.get('game_id',''),
-	}
-	remote_request = requests.post(external_endpoints['current_status'],data).json()
-	return jsonify(remote_request)
+        data = {
+                'game_id': request.args.get('game_id',''),
+        }
+        remote_request = requests.post(external_endpoints['current_status'],data).json()
+        return jsonify(remote_request)
 
 @app.route('/check_status', methods=['POST'])
 def check_game():
-	data = {
-		'game_id': request.args.get('game_id',''),
-	}
-	remote_request = requests.post(external_endpoints['check_game'],data).json()
-	return jsonify(remote_request)
+        data = {
+                'game_id': request.args.get('game_id',''),
+        }
+        remote_request = requests.post(external_endpoints['check_game'],data).json()
+        return jsonify(remote_request)
 
 
 ######### player endpoints ########
 @app.route('/players', methods=['GET'])
 def player():
-	players = Player.query.all()
-	return jsonify(players_schema.dump(players))
+        players = Player.query.all()
+        return jsonify(players_schema.dump(players))
 
 @app.route('/enter_game', methods=['POST'])
 def enter_game():
-	game = ChessGame.query.filter_by(id=request.args.get('game_id','')).first()
-	player = Player.query.filter_by(id=request.args.get('player_id','')).first()
-	player.game_id = game.id
-	db.session.commit()
-	return jsonify(player_schema.dump(player))
+        game = ChessGame.query.filter_by(id=request.args.get('game_id','')).first()
+        player = Player.query.filter_by(id=request.args.get('player_id','')).first()
+        player.game_id = game.id
+        db.session.commit()
+        return jsonify(player_schema.dump(player))
 
 @app.route('/exit_game', methods=['POST'])
 def exit_game():
@@ -209,35 +208,35 @@ def exit_game():
 
 @app.route('/possible_moves', methods=['POST'])
 def possible_moves():
-	data = {
-		'game_id': request.args.get('game_id',''),
-		'position': request.args.get('position','')
-	}
-	remote_request = requests.post(external_endpoints['possible_moves'], data)
-	return jsonify(remote_request.json())
+        data = {
+                'game_id': request.args.get('game_id',''),
+                'position': request.args.get('position','')
+        }
+        remote_request = requests.post(external_endpoints['possible_moves'], data)
+        return jsonify(remote_request.json())
 
 @app.route('/make_move', methods=['POST'])
 def make_move():
-	data = {
-		'game_id': request.args.get('game_id',''),
-		'player_id': request.args.get('player_id',''),
-		'source_position': request.args.get('source_position',''),
-		'target_position': request.args.get('target_position','')
-	}
-	new_move = Move.create(game_id=data['game_id'], player_id=data['player_id'], source_position=data['source_position'], target_position=data['target_position'])
-	return jsonify(move_schema.dump(new_move))
+        data = {
+                'game_id': request.args.get('game_id',''),
+                'player_id': request.args.get('player_id',''),
+                'source_position': request.args.get('source_position',''),
+                'target_position': request.args.get('target_position','')
+        }
+        new_move = Move.create(game_id=data['game_id'], player_id=data['player_id'], source_position=data['source_position'], target_position=data['target_position'])
+        return jsonify(move_schema.dump(new_move))
 
 @app.route('/make_possible_move', methods=['POST'])
 def make_possible_move():
-	data = {
-		'game_id': request.args.get('game_id',''),
-		'player_id': request.args.get('player_id',''),
-		'source_position': request.args.get('source_position',''),
-		'target_position': request.args.get('target_position','')
-	}
-	new_move = PossibleMove.create(game_id=data['game_id'], player_id=data['player_id'], source_position=data['source_position'], target_position=data['target_position'])
-	return jsonify(possible_move_schema.dump(new_move))
+        data = {
+                'game_id': request.args.get('game_id',''),
+                'player_id': request.args.get('player_id',''),
+                'source_position': request.args.get('source_position',''),
+                'target_position': request.args.get('target_position','')
+        }
+        new_move = PossibleMove.create(game_id=data['game_id'], player_id=data['player_id'], source_position=data['source_position'], target_position=data['target_position'])
+        return jsonify(possible_move_schema.dump(new_move))
 
 
 if __name__ == '__main__':
-	app.run(host='0.0.0.0')
+        app.run(host='0.0.0.0')
