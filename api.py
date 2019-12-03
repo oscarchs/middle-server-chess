@@ -158,7 +158,7 @@ def list_moves(game_id):
 @app.route('/list-possible-moves/<game_id>', methods=['GET'])
 def list_possible_moves(game_id):
         moves = PossibleMove.query.filter_by(game_id=game_id).group_by(PossibleMove.player_id).all()
-        print(moves)
+        print(jsonify(moves))
         return jsonify(moves)
 
 @app.route('/clear_moves/<game_id>', methods=['GET'])
