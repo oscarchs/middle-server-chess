@@ -26,7 +26,7 @@ class ChessGame(db.Model):
     id = db.Column(db.Unicode, primary_key=True)
     players = db.relationship('Player',backref='player')
     moves = db.relationship('Move',backref='moves')
-    possible_moves = db.relationship('ListPossibleMoves', backref='list_possible_moves')
+    possible_moves = db.relationship('PossibleMoves', backref='ref_possible_moves_list')
 
     def __repr__(self):
         return '<ChessGame: {}>, CurrentPlayers: {}'.format(self.id,self.players)
@@ -53,9 +53,9 @@ class Player(db.Model):
         db.session.add(obj)
         db.session.commit()
 
-class ListPossibleMoves(db.Model):
-    id = db.Column(db.Unicode, primary_key=True)
-    moves = db.relationship('PossibleMove',backref='possible_moves_list')
+class PossibleMoves(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    moves = db.relationship('Move',backref='ref_possible_moves')
     player_id = db.Column(db.Integer, db.ForeignKey(Player.id))
     game_id = db.Column(db.Unicode, db.ForeignKey(ChessGame.id))
     def __repr__(self):
@@ -69,28 +69,13 @@ class ListPossibleMoves(db.Model):
         return obj
 
 
-class PossibleMove(db.Model):
-    id = db.Column(db.Unicode, primary_key=True)
-    source_position = db.Column(db.String)
-    target_position = db.Column(db.String)
-    list_id = db.Column(db.Integer, db.ForeignKey(ListPossibleMoves.id)) 
-    
-    def __repr__(self):
-        return '<PossibleMove: {}>'.format(self.id)
-
-    @classmethod
-    def create(cls, **kw):
-        obj = cls(**kw)
-        db.session.add(obj)
-        db.session.commit()
-        return obj
-
 class Move(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     player_id = db.Column(db.Integer, db.ForeignKey(Player.id))
     game_id = db.Column(db.Unicode, db.ForeignKey(ChessGame.id))
     source_position = db.Column(db.String)
     target_position = db.Column(db.String)
+    list_id = db.Column(db.Integer, db.ForeignKey(PossibleMoves.id))
     
     def __repr__(self):
         return '<Move: {}>'.format(self.id)
@@ -119,17 +104,19 @@ class MoveSchema(ma.Schema):
 move_schema = MoveSchema()
 moves_schema = MoveSchema(many=True)
 
-class PossibleMoveSchema(ma.Schema):
+class PossibleMovesSchema(ma.Schema):
+    moves = ma.Nested(moves_schema, many=True)
     class Meta:
-        fields = ('id', 'player_id', 'game_id','source_position','target_position')
+        fields = ('id','player_id', 'moves')
 
-possible_move_schema = PossibleMoveSchema()
-possible_moves_schema = PossibleMoveSchema(many=True)
+possible_moves_schema = PossibleMovesSchema()
+possible_movess_schema = PossibleMovesSchema(many=True)
+
 
 class ChessGameSchema(ma.Schema):
     players = ma.Nested(players_schema, many=True)
     moves = ma.Nested(moves_schema, many=True)
-    possible_moves = ma.Nested(possible_moves_schema, many=True)
+    possible_moves = ma.Nested(possible_movess_schema, many=True)
     class Meta:
         fields = ('id','players', 'moves', 'possible_moves')
 
@@ -172,9 +159,8 @@ def list_moves(game_id):
 
 @app.route('/list-possible-moves/<game_id>', methods=['GET'])
 def list_possible_moves(game_id):
-        moves = PossibleMove.query.filter_by(game_id=game_id).group_by(PossibleMove.player_id).all()
-        print(len(moves))
-        return jsonify(possible_moves_schema.dump(moves))
+        moves = PossibleMoves.query.filter_by(game_id=game_id).all()
+        return jsonify(possible_movess_schema.dump(moves))
 
 @app.route('/clear_moves/<game_id>', methods=['GET'])
 def clear_moves(game_id):
@@ -246,11 +232,21 @@ def make_possible_move():
         data = {
                 'game_id': request.args.get('game_id',''),
                 'player_id': request.args.get('player_id',''),
+                'list_id' : request.args.get('list_id',''),
                 'source_position': request.args.get('source_position',''),
                 'target_position': request.args.get('target_position','')
         }
-        new_move = PossibleMove.create(game_id=data['game_id'], player_id=data['player_id'], source_position=data['source_position'], target_position=data['target_position'])
-        return jsonify(possible_move_schema.dump(new_move))
+        new_move = Move.create(list_id=data['list_id'], player_id=data['player_id'], source_position=data['source_position'], target_position=data['target_position'])
+        return jsonify(move_schema.dump(new_move))
+
+@app.route('/make_possible_move_list', methods=['POST'])
+def make_possible_move_list():
+        data = {
+                'game_id': request.args.get('game_id',''),
+                'player_id': request.args.get('player_id',''),
+        }
+        new_list = PossibleMoves.create(game_id=data['game_id'], player_id=data['player_id'])
+        return jsonify(possible_moves_schema.dump(new_list))
 
 
 if __name__ == '__main__':
