@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
+from operator import attrgetter
 import requests
 
 ##app and local db config
@@ -27,6 +28,7 @@ class ChessGame(db.Model):
     players = db.relationship('Player',backref='player')
     moves = db.relationship('Move',backref='moves')
     possible_moves = db.relationship('PossibleMoves', backref='ref_possible_moves_list')
+    votes = db.Column(db.Integer, default=0)
 
     def __repr__(self):
         return '<ChessGame: {}>, CurrentPlayers: {}'.format(self.id,self.players)
@@ -58,6 +60,7 @@ class PossibleMoves(db.Model):
     moves = db.relationship('Move',backref='ref_possible_moves')
     player_id = db.Column(db.Integer, db.ForeignKey(Player.id))
     game_id = db.Column(db.Unicode, db.ForeignKey(ChessGame.id))
+    votes = db.Column(db.Integer, default=0)
     def __repr__(self):
         return '<ListOfPossibleMoves: {}>'.format(self.id)
 
@@ -107,7 +110,7 @@ moves_schema = MoveSchema(many=True)
 class PossibleMovesSchema(ma.Schema):
     moves = ma.Nested(moves_schema, many=True)
     class Meta:
-        fields = ('id','player_id', 'moves')
+        fields = ('id','player_id', 'moves', 'votes')
 
 possible_moves_schema = PossibleMovesSchema()
 possible_movess_schema = PossibleMovesSchema(many=True)
@@ -118,7 +121,7 @@ class ChessGameSchema(ma.Schema):
     moves = ma.Nested(moves_schema, many=True)
     possible_moves = ma.Nested(possible_movess_schema, many=True)
     class Meta:
-        fields = ('id','players', 'moves', 'possible_moves')
+        fields = ('id','players', 'moves', 'possible_moves', 'votes')
 
 chess_game_schema = ChessGameSchema()
 chess_games_schema = ChessGameSchema(many=True)
@@ -247,6 +250,24 @@ def make_possible_move_list():
         }
         new_list = PossibleMoves.create(game_id=data['game_id'], player_id=data['player_id'])
         return jsonify(possible_moves_schema.dump(new_list))
+
+@app.route('/vote', methods = ['POST'])
+def vote():
+        data = {
+                'list_id': request.args.get('list_id'),
+                'game_id': request.args.get('game_id')    
+        }
+        list_to_vote = PossibleMoves.query.filter_by(id=data['list_id']).first()
+        list_to_vote.votes += 1
+        current_game = ChessGame.query.filter_by(id=data['game_id']).first()
+        current_game.votes += 1
+
+        if current_game.votes == len(current_game.players):
+            winner_list = max(current_game.possible_moves, key=attrgetter('votes'))
+            current_game.moves = winner_list.moves
+            db.session.delete(winner_list)
+        db.session.commit()
+        return
 
 
 if __name__ == '__main__':
