@@ -264,7 +264,8 @@ def vote():
 
         if current_game.votes == len(current_game.players):
             winner_list = max(current_game.possible_moves, key=attrgetter('votes'))
-            current_game.moves = winner_list.moves
+            current_game.moves += winner_list.moves
+            current_game.votes = 0
             db.session.delete(winner_list)
         db.session.commit()
         return
