@@ -289,10 +289,10 @@ def vote():
                 'game_id': current_game.id,
             }
             if remote_request.status_code == 200:
-                remote_request = requests.post(external_endpoints['ask_ai_to_move'], ai_data).json()
-                print(remote_request)
-                new_ai_move = Move.create(game_id=current_game.id, source_position=remote_request['from'],\
-                 target_position=remote_request['to'])
+                remote_request2 = requests.post(external_endpoints['ask_ai_to_move'], ai_data).json()
+                print(remote_request2)
+                new_ai_move = Move.create(game_id=current_game.id, source_position=remote_request2['from'],\
+                 target_position=remote_request2['to'])
         db.session.commit()
         return
 
