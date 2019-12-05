@@ -275,7 +275,6 @@ def vote():
             winner_list = max(current_game.possible_moves, key=attrgetter('votes'))
             current_game.moves += winner_list.moves
             current_game.votes = 0
-            db.session.delete(winner_list)
 
             # now we have to send the winner list moves to remote api chess, and get the new move by the AI 
 
@@ -284,6 +283,7 @@ def vote():
                 'from': winner_list.moves[0].source_position,
                 'to': winner_list.moves[0].target_position
             }
+            db.session.delete(winner_list)
             remote_request = requests.post(external_endpoints['make_move'], move_data)
             ai_data = {
                 'game_id': current_game.id,
