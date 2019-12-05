@@ -281,7 +281,7 @@ def vote():
             ai_data = {
                 'game_id': current_game.id,
             }
-            check_status = requests.post(external_endpoints['current_status'], ai_data)
+            check_status = requests.post(external_endpoints['current_status'], ai_data).json()
             if check_status['fen_string']:
                 move_data = {
                     'game_id': current_game.id,
