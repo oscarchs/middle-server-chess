@@ -148,7 +148,7 @@ def authenticate():
 def create_game():
         remote_request = requests.get(external_endpoints['create_game']).json()
         new_game = ChessGame.create(id=remote_request['game_id'])
-        return jsonify(chess_game_schema(new_game))
+        return jsonify(chess_game_schema.dump(new_game))
 
 @app.route('/list-games', methods=['GET'])
 def list_games():
