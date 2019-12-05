@@ -281,7 +281,7 @@ def vote():
             ai_data = {
                 'game_id': current_game.id,
             }
-            check_status = requests.post(remote_request['current_status'], ai_data)
+            check_status = requests.post(external_endpoints['current_status'], ai_data)
             if check_status['fen_string']:
                 move_data = {
                     'game_id': current_game.id,
@@ -295,6 +295,8 @@ def vote():
                     print("12312312")
                     new_ai_move = Move.create(game_id=current_game.id, source_position=remote_request['from'],\
                      target_position=remote_request['to'])
+            else:
+                print("No esta disponible el ID en apichess remoto")
             db.session.delete(winner_list)
         db.session.commit()
         return
