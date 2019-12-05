@@ -277,26 +277,21 @@ def vote():
             current_game.votes = 0
 
             # now we have to send the winner list moves to remote api chess, and get the new move by the AI 
-
             ai_data = {
                 'game_id': current_game.id,
             }
-            check_status = requests.post(external_endpoints['current_status'], ai_data).json()
-            if check_status['fen_string']:
-                move_data = {
-                    'game_id': current_game.id,
-                    'from': winner_list.moves[0].source_position,
-                    'to': winner_list.moves[0].target_position
-                }
-                remote_request = requests.post(external_endpoints['make_move'], move_data)
-                if remote_request.status_code == 200:
-                    remote_request = requests.post(external_endpoints['ask_ai_to_move'], ai_data).json()
-                    print(remote_request)
-                    print("12312312")
-                    new_ai_move = Move.create(game_id=current_game.id, source_position=remote_request['from'],\
-                     target_position=remote_request['to'])
-            else:
-                print("No esta disponible el ID en apichess remoto")
+            move_data = {
+                'game_id': current_game.id,
+                'from': winner_list.moves[0].source_position,
+                'to': winner_list.moves[0].target_position
+             }
+            check = requests.post(external_endpoints['make_move'], ai_data).json() 
+            if fen_string in check:
+             remote_request = requests.post(external_endpoints['make_move'], move_data)
+             if remote_request.status_code == 200:
+                remote_request = requests.post(external_endpoints['ask_ai_to_move'], ai_data).json()
+                new_ai_move = Move.create(game_id=current_game.id, source_position=remote_request['from'],\
+                 target_position=remote_request['to'])
             db.session.delete(winner_list)
         db.session.commit()
         return
