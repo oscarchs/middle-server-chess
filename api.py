@@ -211,7 +211,7 @@ def exit_game():
         db.session.commit()
 		if len(game.players) == 0:
 			db.session.delete(game)
-			db.session.commmit()
+			db.session.commit()
         return jsonify(player_schema.dump(player))
 
 @app.route('/possible_moves', methods=['POST'])
