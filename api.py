@@ -278,21 +278,24 @@ def vote():
 
             # now we have to send the winner list moves to remote api chess, and get the new move by the AI 
 
-            move_data = {
-                'game_id': current_game.id,
-                'from': winner_list.moves[0].source_position,
-                'to': winner_list.moves[0].target_position
-            }
-            db.session.delete(winner_list)
-            remote_request = requests.post(external_endpoints['make_move'], move_data)
             ai_data = {
                 'game_id': current_game.id,
             }
-            if remote_request.status_code == 200:
-                remote_request2 = requests.post(external_endpoints['ask_ai_to_move'], ai_data).json()
-                print(remote_request2)
-                new_ai_move = Move.create(game_id=current_game.id, source_position=remote_request2['from'],\
-                 target_position=remote_request2['to'])
+            check_status = requests.post(remote_request['current_status'], ai_data)
+            if check_status['fen_string']:
+                move_data = {
+                    'game_id': current_game.id,
+                    'from': winner_list.moves[0].source_position,
+                    'to': winner_list.moves[0].target_position
+                }
+                remote_request = requests.post(external_endpoints['make_move'], move_data)
+                if remote_request.status_code == 200:
+                    remote_request = requests.post(external_endpoints['ask_ai_to_move'], ai_data).json()
+                    print(remote_request)
+                    print("12312312")
+                    new_ai_move = Move.create(game_id=current_game.id, source_position=remote_request['from'],\
+                     target_position=remote_request['to'])
+            db.session.delete(winner_list)
         db.session.commit()
         return
 
