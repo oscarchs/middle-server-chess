@@ -38,6 +38,7 @@ class ChessGame(db.Model):
         obj = cls(**kw)
         db.session.add(obj)
         db.session.commit()
+        return obj
 
 
 class Player(db.Model):
@@ -54,6 +55,8 @@ class Player(db.Model):
         obj = cls(**kw)
         db.session.add(obj)
         db.session.commit()
+        return obj
+        
 
 class PossibleMoves(db.Model):
     id = db.Column(db.Integer, primary_key=True)
