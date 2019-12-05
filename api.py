@@ -15,10 +15,12 @@ migrate = Migrate(app, db)
 
 ## external api chess endpoints
 external_endpoints = {
-        'create_game': 'http://chess-api-chess.herokuapp.com/api/v1/chess/two',
-        'possible_moves': 'http://chess-api-chess.herokuapp.com/api/v1/chess/two/moves',
-        'check_game': 'http://chess-api-chess.herokuapp.com/api/v1/chess/two/check',
-        'current_status': 'http://chess-api-chess.herokuapp.com/api/v1/chess/two/fen'
+        'create_game': 'http://chess-api-chess.herokuapp.com/api/v1/chess/one',
+        'possible_moves': 'http://chess-api-chess.herokuapp.com/api/v1/chess/one/moves',
+        'check_game': 'http://chess-api-chess.herokuapp.com/api/v1/chess/one/check',
+        'current_status': 'http://chess-api-chess.herokuapp.com/api/v1/chess/one/fen',
+        'make_move':'http://chess-api-chess.herokuapp.com/api/v1/chess/one/move/player',
+        'ask_ai_to_move': 'http://chess-api-chess.herokuapp.com/api/v1/chess/one/move/ai'
 }
 
 
@@ -56,7 +58,7 @@ class Player(db.Model):
         db.session.add(obj)
         db.session.commit()
         return obj
-        
+
 
 class PossibleMoves(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -274,9 +276,24 @@ def vote():
             current_game.moves += winner_list.moves
             current_game.votes = 0
             db.session.delete(winner_list)
+
+            # now we have to send the winner list moves to remote api chess, and get the new move by the AI 
+
+            move_data = {
+                'game_id': current_game.id,
+                'from': winner_list.moves[0].source_position,
+                'to': winner_list.moves[0].target_position
+            }
+            remote_request = requests.post(external_endpoints['make_move'], move_data)
+            ai_data = {
+                'game_id': current_game.id,
+            }
+            if remote_request.status_code == 200:
+                remote_request = requests.post(external_endpoints['ask_ai_to_move'], ai_data).json()
+                new_ai_move = Move.create(game_id=current_game.id, source_position=remote_request['from'],\
+                 target_position=remote_request['to'])
         db.session.commit()
         return
-
 
 if __name__ == '__main__':
         app.run(host='0.0.0.0')
