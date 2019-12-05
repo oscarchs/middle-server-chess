@@ -206,8 +206,12 @@ def enter_game():
 @app.route('/exit_game', methods=['POST'])
 def exit_game():
         player = Player.query.filter_by(id=request.args.get('player_id','')).first()
-        player.game_id = ""
+		game = ChessGame.query.filter_by(id=player.game_id).first()
+		player.game_id = ""
         db.session.commit()
+		if len(game.players) == 0:
+			db.session.delete(game)
+			db.session.commmit()
         return jsonify(player_schema.dump(player))
 
 @app.route('/possible_moves', methods=['POST'])
