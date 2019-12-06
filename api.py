@@ -160,6 +160,12 @@ def list_games():
         games = ChessGame.query.all()
         return jsonify(chess_games_schema.dump(games))
 
+@app.route('/clear-games', methods=['GET'])
+def clear_games():
+        games = ChessGame.query.delete()
+        db.session.commit()
+        return jsonify({"message": "All Rooms deleted"})
+
 @app.route('/list-moves/<game_id>', methods=['GET'])
 def list_moves(game_id):
         moves = Move.query.filter_by(game_id=game_id).all()
@@ -293,7 +299,7 @@ def vote():
                     new_ai_move = Move.create(game_id=current_game.id, source_position=remote_request['from'],
                                               target_position=remote_request['to'])
             else:
-                print(remote_request.json())
+                print(check.json())
             db.session.delete(winner_list)
         db.session.commit()
         return
