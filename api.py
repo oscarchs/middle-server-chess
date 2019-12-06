@@ -292,8 +292,8 @@ def vote():
                     remote_request = requests.post(external_endpoints['ask_ai_to_move'], ai_data).json()
                     new_ai_move = Move.create(game_id=current_game.id, source_position=remote_request['from'],
                                               target_position=remote_request['to'])
-                else:
-                    print(remote_request.json())
+            else:
+                print(remote_request.json())
             db.session.delete(winner_list)
         db.session.commit()
         return
