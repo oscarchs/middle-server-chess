@@ -285,7 +285,7 @@ def vote():
                 'from': winner_list.moves[0].source_position,
                 'to': winner_list.moves[0].target_position
              }
-            check = requests.post(external_endpoints['check_game'], ai_data).json()
+            check = requests.post(external_endpoints['current_status'], ai_data).json()
             if 'fen_string' in check:
                 remote_request = requests.post(external_endpoints['make_move'], move_data)
                 if remote_request.status_code == 200:
