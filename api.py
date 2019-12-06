@@ -285,16 +285,17 @@ def vote():
                 'from': winner_list.moves[0].source_position,
                 'to': winner_list.moves[0].target_position
              }
-            check = requests.post(external_endpoints['make_move'], ai_data).json() 
+            check = requests.post(external_endpoints['check_game'], ai_data).json()
             if 'fen_string' in check:
-             remote_request = requests.post(external_endpoints['make_move'], move_data)
-             if remote_request.status_code == 200:
-                remote_request = requests.post(external_endpoints['ask_ai_to_move'], ai_data).json()
-                new_ai_move = Move.create(game_id=current_game.id, source_position=remote_request['from'],\
-                 target_position=remote_request['to'])
+                remote_request = requests.post(external_endpoints['make_move'], move_data)
+                if remote_request.status_code == 200:
+                    remote_request = requests.post(external_endpoints['ask_ai_to_move'], ai_data).json()
+                    new_ai_move = Move.create(game_id=current_game.id, source_position=remote_request['from'],
+                                              target_position=remote_request['to'])
             db.session.delete(winner_list)
         db.session.commit()
         return
+
 
 if __name__ == '__main__':
         app.run(host='0.0.0.0')
